@@ -18,13 +18,13 @@ def generate_response(prompt):
             return response.text.strip() if response.text else "No response generated."
 
         except Exception:
-            print(f"[INFO] Retry {attempt+1}...")
+            # print(f"[INFO] Retry {attempt+1}...")
 
             time.sleep(1)
 
     # Fallback model
     try:
-        print("[INFO] Switching to fallback model...")
+        # print("[INFO] Switching to fallback model...")
 
         response = client.models.generate_content(
             model="gemini-flash-latest",

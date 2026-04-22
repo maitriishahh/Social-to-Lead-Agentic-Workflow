@@ -3,6 +3,8 @@ import csv
 import os
 from datetime import datetime
 
+timestamp = datetime.now().strftime('%d-%m-%Y %H:%M')
+
 def mock_lead_capture(name,email,platform):
     file_exists = os.path.isfile('leads.csv')
     with open('leads.csv','a',newline='') as file:
@@ -10,7 +12,7 @@ def mock_lead_capture(name,email,platform):
 
         if not file_exists:
             writer.writerow(['Name','Email','Platform','Date'])
-        writer.writerow([name,email,platform,datetime.now()])
+        writer.writerow([name,email,platform,timestamp])
     print(f'\nLead captured: {name},{email},{platform}\n')
 
 
@@ -83,7 +85,7 @@ def chat():
         intent = detect_intent(user_input)
 
         if intent == 'greeting':
-            print('Bot: Hey, welcome to AutoStream! Your AI-powered video editing platform for content creators. I can help you with pricing, policies or getting started :)')
+            print("Bot: Welcome to AutoStream, an AI-powered video editing platform for content creators. I can assist you with pricing, policies or getting started :)")
         
         elif intent == 'pricing':
             data = retrieve_answer(user_input)
