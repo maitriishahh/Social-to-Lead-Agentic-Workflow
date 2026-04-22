@@ -1,4 +1,39 @@
 import json
+import os
+from dotenv import load_dotenv
+from google import genai
+import time
+
+load_dotenv()
+
+client = genai.Client(api_key=os.getenv('GEMINI_API_KEY'))
+
+def generate_response(prompt):
+    for attempt in range(2):
+        try:
+            response = client.models.generate_content(
+                model="gemini-2.5-flash",
+                contents=prompt
+            )
+            return response.text.strip() if response.text else "No response generated."
+
+        except Exception:
+            print(f"[INFO] Retry {attempt+1}...")
+
+            time.sleep(1)
+
+    # Fallback model
+    try:
+        print("[INFO] Switching to fallback model...")
+
+        response = client.models.generate_content(
+            model="gemini-flash-latest",
+            contents=prompt
+        )
+        return response.text.strip() if response.text else "No response generated."
+
+    except Exception:
+        return "Sorry, I'm facing high traffic right now. Please try again."
 
 def load_knowledge():
     with open('knowledge_base.json','r')as f:
@@ -7,12 +42,37 @@ def load_knowledge():
 
 def retrieve_answer(query):
     data = load_knowledge()
-    query = query.lower()
 
-    if any(word in query for word in ["price", "pricing", "plan", "plans", "cost"]):
-        return data["pricing"]
+    prompt = f"""
+    You are an AI assistant for AutoStream.
+
+Answer the user's question using ONLY this data:
+{data}
+
+User question: {query}
+
+Format the answer nicely:
+- Use bullet points
+- Be concise
+- Be friendly
+    """
+
+    return generate_response(prompt)
+
+
+def detect_intent(user_input):
+    text = user_input.lower()
+
+    if any(word in text for word in ["buy", "subscribe", "sign up", "interested", "try"]):
+        return 'high_intent'
     
-    elif any(word in query for word in ["refund", "policy", "support"]):
-        return data["policies"]
+    elif any(word in text for word in ['hi','hello','hey']):
+        return 'greeting'
+    
+    elif any(word in text for word in ["price", "pricing", "plan", "plans", "cost","feature", "features"]):
+        return 'pricing'
+    
+    elif any(word in text for word in ["policy", "policies", "refund", "support"]):  
+        return "policies"
     else:
-        return 'No relevant information found.'
+        return 'unknown'
